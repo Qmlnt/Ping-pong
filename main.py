@@ -89,18 +89,26 @@ class Ball(GameSprite):
     def change_vector(self, vector: int) -> None:
         self.vector[vector] *= -1
         for i in range(2):
-            if self.vector[i] > 0 and self.vector[i] < BALL_TOP_SPEED:
+            if self.vector[i] >= 0 and self.vector[i] < BALL_TOP_SPEED:
                 self.vector[i] += self.speed
-            else:
+            elif self.vector[i] < 0 and self.vector[i] > -BALL_TOP_SPEED:
                 self.vector[i] -= self.speed
 
-    def update(self) -> None:
-        if self.rect.x < 0:
+    def update(self, left_player: Player, right_player: Player) -> None:
+        if self.rect.colliderect(left_player.rect):
+            self.change_vector(0)
+            self.rect.x = PLAYER1_X+PLAYER_DIMENSIONS[0] +1
+        elif self.rect.colliderect(right_player.rect):
+            self.change_vector(0)
+            self.rect.x = WINDOW_WIDTH-PLAYER1_X-PLAYER_DIMENSIONS[0]-BALL_DIMENSIONS[0] -1
+        elif self.rect.x < 0:
             self.change_vector(0)
             self.rect.x = 1
+            left_player.score -= 1
         elif self.rect.x > WINDOW_WIDTH-BALL_DIMENSIONS[0]:
             self.change_vector(0)
             self.rect.x = WINDOW_WIDTH-BALL_DIMENSIONS[0] -1
+            right_player.score -= 1
 
         if self.rect.y < 0:
             self.change_vector(1)
@@ -132,7 +140,7 @@ while executing:
 
     player1.update()
     player2.update()
-    ball.update()
+    ball.update(player1, player2)
     text1.draw(str(player1.score))
     text2.draw(str(player2.score))
     ball.draw()
