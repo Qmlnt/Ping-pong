@@ -57,13 +57,13 @@ timer = pg.time.Clock() # timer for fps
 
 # Classes for the game
 class Text():
-    def __init__(self, font: str, size: int, x: int, y: int, color:tuple) -> None:
+    def __init__(self, font: str, size: int, x: int, y: int, color: tuple) -> None:
         self.font = pg.font.SysFont(font, size)
         self.x = x
         self.y = y
         self.color = color
     
-    def draw(self, content: str):
+    def draw(self, content: str) -> None:
         text = self.font.render(content, True, self.color)
         main_window.blit(text, text.get_rect(center = (self.x, self.y)))
 
@@ -78,6 +78,27 @@ class GameSprite(pg.sprite.Sprite):
 
     def draw(self):
         main_window.blit(self.image, (self.rect.x, self.rect.y))
+
+class Button(GameSprite):
+    def __init__(self, image: pg.Surface, x: int, y: int, txt_content: str, color: tuple, txt_font: str, txt_size: int, txt_color: tuple, show: bool = False) -> None:
+        super().__init__(image, x, y, color)
+        self.text = Text(txt_font, txt_size, self.rect.centerx, self.rect.centery, txt_color)
+        self.content = txt_content
+        self.show = show
+
+    def clicked(self) -> bool:
+        if self.show:
+            for event in event_list:
+                if event.type == pg.MOUSEBUTTONDOWN:
+                    if event.button == 1:
+                        if self.rect.collidepoint(event.pos):
+                            return True
+        return False
+
+    def draw(self) -> None:
+        if self.show:
+            super().draw()
+            self.text.draw(self.content)
 
 class Player(GameSprite):
     def __init__(self, image: pg.Surface, x: int, y: int, speed: float, up: int, down: int, score: int, color: tuple) -> None:
@@ -136,6 +157,7 @@ class Ball(GameSprite):
 
 
 # configuring objects
+test_button = Button(pg.Surface((200, 200)), 300, 150, "TESTOO", (255,100,200), TEXT_FONT, 40, (0,255,0), True)
 text1 = Text(TEXT_FONT, TEXT_SIZE, TEXT1_X, TEXT_Y, TEXT_COLOR)
 text2 = Text(TEXT_FONT, TEXT_SIZE, TEXT2_X, TEXT_Y, TEXT_COLOR)
 win = Text(TEXT_FONT, TEXT_SIZE, TEXT_WIN_X, TEXT_WIN_Y, TEXT_WIN_COLOR)
@@ -148,8 +170,8 @@ player2 = Player(pg.Surface(PLAYER_DIMENSIONS), PLAYER2_X, PLAYER_Y, PLAYER_SPEE
 executing = True
 game = True
 while executing:
-
-    for e in pg.event.get():
+    event_list = pg.event.get()
+    for e in event_list:
         if e.type == pg.QUIT:
             executing = False
         elif e.type == pg.KEYDOWN:
@@ -161,6 +183,10 @@ while executing:
 
     if game:
         main_window.blit(background, (0,0))
+
+        test_button.draw()
+        if test_button.clicked():
+            print("CLICKED!!!!!")
 
         player1.update()
         player2.update()
