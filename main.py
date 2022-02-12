@@ -3,8 +3,8 @@ from random import choice as ch
 
 #............................................................. window params
 FPS = 60
-WINDOW_WIDTH = 1920
-WINDOW_HEIGHT = 1080
+WINDOW_WIDTH = 800
+WINDOW_HEIGHT = 500
 WINDOW_CAPTION = "Ping pong"
 WINDOW_ICON_IMG  = "icon.png"
 BACKGROUND_IMG = "background.jpg"
@@ -30,20 +30,20 @@ PLAYER_Y = int((WINDOW_HEIGHT-PLAYER_DIMENSIONS[1])/2)
 PLAYER2_X = WINDOW_WIDTH-PLAYER_DIMENSIONS[0]-PLAYER1_X
 #............................................................. text params
 TEXT_SIZE = 50
-TEXT_Y = 4
+TEXT_Y = TEXT_SIZE/5*3
 TEXT_COLOR = (155, 255, 255)
 TEXT_FONT = "Comic Sans MS"
 TEXT_CONTENT = str(PLAYER_SCORE)
-TEXT1_X = int(WINDOW_WIDTH/2)-TEXT_SIZE*4
-TEXT2_X = WINDOW_WIDTH-TEXT1_X-TEXT_SIZE/2
+TEXT1_X = int(WINDOW_WIDTH/2)-150
+TEXT2_X = WINDOW_WIDTH-TEXT1_X
 TEXT_WIN = "Player {} WON!"
+TEXT_WIN_X = WINDOW_WIDTH/2
 TEXT_WIN_Y = WINDOW_HEIGHT/2-TEXT_SIZE
 TEXT_WIN_COLOR = (255, 255, 0)
-TEXT_WIN_X = int((WINDOW_WIDTH)/2-TEXT_SIZE*7/2)
 TEXT_RESTART = "Press 'R' to restart"
 TEXT_RESTART_COLOR = (255, 100, 200)
+TEXT_RESTART_X = WINDOW_WIDTH/2
 TEST_RESTART_Y = TEXT_WIN_Y+TEXT_SIZE
-TEXT_RESTART_X = int((WINDOW_WIDTH)/2-TEXT_SIZE*9/2)
 
 
 pg.display.set_caption(WINDOW_CAPTION)              # configuring window
@@ -57,36 +57,36 @@ timer = pg.time.Clock() # timer for fps
 
 # Classes for the game
 class Text():
-    def __init__(self, font: str, size: int, x: int, y: int, color:tuple, back_color: tuple = None) -> None:
+    def __init__(self, font: str, size: int, x: int, y: int, color:tuple) -> None:
         self.font = pg.font.SysFont(font, size)
         self.x = x
         self.y = y
         self.color = color
-        self.back_color = back_color
     
     def draw(self, content: str):
-        main_window.blit(self.font.render(content, True, self.color, self.back_color), (self.x, self.y))
+        text = self.font.render(content, True, self.color)
+        main_window.blit(text, text.get_rect(center = (self.x, self.y)))
 
 class GameSprite(pg.sprite.Sprite):
-    def __init__(self, image: pg.Surface, x: int, y: int, speed: float = 0) -> None:
+    def __init__(self, image: pg.Surface, x: int, y: int, color: tuple = None) -> None:
         super().__init__()
         self.image = image
         self.rect = self.image.get_rect()
         self.rect.x = x
         self.rect.y = y
-        self.speed = speed
-    
+        if color: self.image.fill(color)
+
     def draw(self):
         main_window.blit(self.image, (self.rect.x, self.rect.y))
 
 class Player(GameSprite):
-    def __init__(self, image: pg.Surface, x: int, y: int, speed: float, up: int, down: int, score:int, color: tuple) -> None:
-        super().__init__(image, x, y, speed)
-        self.image.fill(color)
+    def __init__(self, image: pg.Surface, x: int, y: int, speed: float, up: int, down: int, score: int, color: tuple) -> None:
+        super().__init__(image, x, y, color)
         self.up = up
         self.down = down
+        self.speed = speed
         self.score = score
-    
+
     def update(self) -> None:
         keys = pg.key.get_pressed()
         if keys[self.up] and self.rect.y > 0:
@@ -96,8 +96,9 @@ class Player(GameSprite):
 
 class Ball(GameSprite):
     def __init__(self, image: pg.Surface, x: int, y: int, speed: int, vector: list) -> None:
-        super().__init__(image, x, y, speed)
+        super().__init__(image, x, y)
         self.vector = list(vector)
+        self.speed = speed
 
     def change_vector(self, vector: int) -> None:
         self.vector[vector] *= -1
