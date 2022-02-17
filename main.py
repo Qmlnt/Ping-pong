@@ -18,11 +18,11 @@ PLAYER2_X = cfg["WINDOW_WIDTH"]-cfg["PLAYER_DIMENSIONS"][0]-cfg["PLAYER1_X"]
 TEXT_COUNT_Y = cfg["TEXT_SIZE"]/5*3
 TEXT_COUNTER2_X = cfg["WINDOW_WIDTH"]-cfg["TEXT_COUNTER1_X"]
 TEXT_WIN_Y = HALF_HEIGHT-cfg["TEXT_SIZE"]
+TEXT_MENU2_X = cfg["WINDOW_WIDTH"]-cfg["TEXT_MENU1_X"]
 
 pg.display.set_caption(cfg["WINDOW_CAPTION"])              # configuring window
 pg.display.set_icon(pg.image.load(cfg["WINDOW_ICON_IMG"]))
 main_window = pg.display.set_mode((cfg["WINDOW_WIDTH"], cfg["WINDOW_HEIGHT"]))
-background = pg.transform.scale(pg.image.load(cfg["BACKGROUND_IMG"]), (cfg["WINDOW_WIDTH"], cfg["WINDOW_HEIGHT"]))
 
 pg.font.init()          # for Text class
 timer = pg.time.Clock() # timer for fps
@@ -52,28 +52,25 @@ class GameSprite(pg.sprite.Sprite):
         main_window.blit(self.image, (self.rect.x, self.rect.y))
 
 class Button(GameSprite):
-    def __init__(self, image: pg.Surface, x: int, y: int, color: tuple, border_color: tuple, border_thickness: tuple, txt_content: str, txt_font: str, txt_size: int, txt_color: tuple, show: bool = False) -> None:
+    def __init__(self, image: pg.Surface, x: int, y: int, color: tuple, border_color: tuple, border_thickness: tuple, txt_content: str, txt_font: str, txt_size: int, txt_color: tuple) -> None:
         super().__init__(image, x, y, color)
         self.text = Text(txt_font, txt_size, self.rect.centerx, self.rect.centery, txt_color)
         self.border_thickness = border_thickness
         self.border_color = border_color
         self.content = txt_content
-        self.show = show
 
     def clicked(self) -> bool:
-        if self.show:
-            for event in event_list:
-                if event.type == pg.MOUSEBUTTONDOWN:
-                    if event.button == 1:
-                        if self.rect.collidepoint(event.pos):
-                            return True
+        for event in event_list:
+            if event.type == pg.MOUSEBUTTONDOWN:
+                if event.button == 1:
+                    if self.rect.collidepoint(event.pos):
+                        return True
         return False
 
     def draw(self) -> None:
-        if self.show:
-            super().draw()
-            self.text.draw(self.content)
-            pg.draw.rect(self.image, self.border_color, (0,0, self.rect.width, self.rect.height), self.border_thickness)
+        super().draw()
+        self.text.draw(self.content)
+        pg.draw.rect(self.image, self.border_color, (0,0, self.rect.width, self.rect.height), self.border_thickness)
 
 class Player(GameSprite):
     def __init__(self, image: pg.Surface, x: int, y: int, speed: float, up: int, down: int, score: int, color: tuple) -> None:
@@ -134,19 +131,35 @@ class Ball(GameSprite):
 
 
 # configuring objects
-# test_button = Button(pg.Surface((200, 200)), 300, 150, (255,100,200), (0,255,0), 5, "TESTOO", cfg["TEXT_FONT"], 40, (0,255,0), True)
 
-counter1 = Text(cfg["TEXT_FONT"], cfg["TEXT_SIZE"], cfg["TEXT_COUNTER1_X"], TEXT_COUNT_Y, cfg["TEXT_COUNT_COLOR"])
-counter2 = Text(cfg["TEXT_FONT"], cfg["TEXT_SIZE"], TEXT_COUNTER2_X, TEXT_COUNT_Y, cfg["TEXT_COUNT_COLOR"])
-win = Text(cfg["TEXT_FONT"], cfg["TEXT_SIZE"], HALF_WIDTH, TEXT_WIN_Y, cfg["TEXT_WIN_COLOR"])
-restart = Text(cfg["TEXT_FONT"], cfg["TEXT_SIZE"], HALF_WIDTH, HALF_HEIGHT, cfg["TEXT_RESTART_COLOR"])
-ball = Ball(pg.transform.scale(pg.image.load(cfg["BALL_IMG"]), cfg["BALL_DIMENSIONS"]), HALF_WIDTH, HALF_HEIGHT, cfg["BALL_SPEED"], cfg["BALL_TOP_SPEED"], BALL_VECTOR)
-player1 = Player(pg.Surface(cfg["PLAYER_DIMENSIONS"]), cfg["PLAYER1_X"], HALF_HEIGHT, cfg["PLAYER_SPEED"], PLAYER1_UP, PLAYER1_DOWN, cfg["PLAYER_SCORE"], cfg["PLAYER_COLOR"])
+background_game = pg.transform.scale(pg.image.load(cfg["BACKGROUND_IMG"]), (cfg["WINDOW_WIDTH"], cfg["WINDOW_HEIGHT"]))
+
+pvp_button = Button(pg.Surface(cfg["BUTTON_DIMENSIONS"]), HALF_WIDTH, HALF_HEIGHT-cfg["BUTTON_DISTANCES"]-cfg["BUTTON_DIMENSIONS"][1], cfg["BUTTON_COLOR"],
+    cfg["BUTTON_BORDER_COLOR"], cfg["BUTTON_BORDER_THICKNESS"], "Player VS Player", cfg["TEXT_FONT"], cfg["BUTTON_TEXT_SIZE"], cfg["BUTTON_TEXT_COLOR"])
+pvbot_button = Button(pg.Surface(cfg["BUTTON_DIMENSIONS"]), HALF_WIDTH, HALF_HEIGHT, cfg["BUTTON_COLOR"], cfg["BUTTON_BORDER_COLOR"], cfg["BUTTON_BORDER_THICKNESS"],
+    "Player VS Bot", cfg["TEXT_FONT"], cfg["BUTTON_TEXT_SIZE"], cfg["BUTTON_TEXT_COLOR"])
+counter1_m = Text(cfg["TEXT_FONT"], cfg["TEXT_MENU_SIZE"], cfg["TEXT_MENU1_X"], HALF_HEIGHT, cfg["TEXT_COUNT_COLOR"])
+counter2_m = Text(cfg["TEXT_FONT"], cfg["TEXT_MENU_SIZE"], TEXT_MENU2_X, HALF_HEIGHT, cfg["TEXT_COUNT_COLOR"])
+player1_menu_score = 0
+player2_menu_score = 0
+
+counter1_g = Text(cfg["TEXT_FONT"], cfg["TEXT_SIZE"], cfg["TEXT_COUNTER1_X"], TEXT_COUNT_Y, cfg["TEXT_COUNT_COLOR"])
+counter2_g = Text(cfg["TEXT_FONT"], cfg["TEXT_SIZE"], TEXT_COUNTER2_X, TEXT_COUNT_Y, cfg["TEXT_COUNT_COLOR"])
+ball_g = Ball(pg.transform.scale(pg.image.load(cfg["BALL_IMG"]), cfg["BALL_DIMENSIONS"]), HALF_WIDTH, HALF_HEIGHT, cfg["BALL_SPEED"], cfg["BALL_TOP_SPEED"], BALL_VECTOR)
+player1_g = Player(pg.Surface(cfg["PLAYER_DIMENSIONS"]), cfg["PLAYER1_X"], HALF_HEIGHT, cfg["PLAYER_SPEED"], PLAYER1_UP, PLAYER1_DOWN, cfg["PLAYER_SCORE"], cfg["PLAYER_COLOR"])
+player2_g = None
 player2 = Player(pg.Surface(cfg["PLAYER_DIMENSIONS"]), PLAYER2_X, HALF_HEIGHT, cfg["PLAYER_SPEED"], PLAYER2_UP, PLAYER2_DOWN, cfg["PLAYER_SCORE"], cfg["PLAYER_COLOR"])
+bot2 = None
+
+def normalize() -> None:
+    ball_g.rect.center, ball_g.vector = (HALF_WIDTH, HALF_HEIGHT), list(BALL_VECTOR)
+    player1_g.rect.x, player1_g.rect.centery, player1_g.score = cfg["PLAYER1_X"], HALF_HEIGHT, cfg["PLAYER_SCORE"]
+    player2_g.rect.x, player2_g.rect.centery, player2_g.score = PLAYER2_X, HALF_HEIGHT, cfg["PLAYER_SCORE"]
 
 # the game itself
+menu = True
+game = False
 executing = True
-game = True
 while executing:
     event_list = pg.event.get()
     for e in event_list:
@@ -154,31 +167,38 @@ while executing:
             executing = False
         elif e.type == pg.KEYDOWN:
             if e.key == pg.K_r:
-                game = True
-                ball.rect.center, ball.vector = (HALF_WIDTH, HALF_HEIGHT), list(BALL_VECTOR)
-                player1.rect.x, player1.rect.centery, player1.score = cfg["PLAYER1_X"], HALF_HEIGHT, cfg["PLAYER_SCORE"]
-                player2.rect.x, player2.rect.centery, player2.score = PLAYER2_X, HALF_HEIGHT, cfg["PLAYER_SCORE"]
+                normalize()
+
+    main_window.blit(background_game, (0,0))
+
+    if menu:
+        pvp_button.draw()
+        pvbot_button.draw()
+        counter1_m.draw(str(player1_menu_score))
+        counter2_m.draw(str(player2_menu_score))
+        if pvp_button.clicked() or pvbot_button.clicked():
+            player2_g = player2 if pvp_button.clicked() else bot2
+            normalize()
+            game = True
+            menu = False
 
     if game:
-        main_window.blit(background, (0,0))
+        player1_g.update()
+        player2_g.update()
+        ball_g.update(player1_g, player2_g)
+        counter1_g.draw(str(player1_g.score))
+        counter2_g.draw(str(player2_g.score))
+        ball_g.draw()
+        player1_g.draw()
+        player2_g.draw()
 
-        # test_button.draw()
-        # if test_button.clicked():
-        #     print("CLICKED!!!!!")
-
-        player1.update()
-        player2.update()
-        ball.update(player1, player2)
-        counter1.draw(str(player1.score))
-        counter2.draw(str(player2.score))
-        ball.draw()
-        player1.draw()
-        player2.draw()
-
-        if player1.score < 1 or player2.score < 1:
+        if player1_g.score < 1 or player2_g.score < 1:
+            menu = True
             game = False
-            win.draw(cfg["TEXT_WIN"].format("<-" if player2.score<1 else "->"))
-            restart.draw(cfg["TEXT_RESTART"])
+            if player2_g.score < 1:
+                player1_menu_score +=1
+            else:
+                player2_menu_score += 1
 
     pg.display.update()
     timer.tick(FPS)
