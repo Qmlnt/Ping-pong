@@ -1,6 +1,6 @@
 import json
 import pygame as pg
-from random import choice as ch
+from random import randint as ri
 
 with open("config.json", "r") as config:
     cfg = json.load(config)
@@ -8,8 +8,7 @@ with open("config.json", "r") as config:
 FPS = cfg["FPS"]
 HALF_HEIGHT = int(cfg["WINDOW_HEIGHT"]/2)
 HALF_WIDTH = int(cfg["WINDOW_WIDTH"]/2)
-
-BALL_VECTOR = (ch(cfg["BALL_VECTOR"]), ch(cfg["BALL_VECTOR"]))
+BALL_VECTOR = (ri(-cfg["BALL_VECTOR"], cfg["BALL_VECTOR"]), ri(-cfg["BALL_VECTOR"], cfg["BALL_VECTOR"]))
 PLAYER1_UP = pg.K_w
 PLAYER1_DOWN = pg.K_s
 PLAYER2_UP = pg.K_UP
@@ -88,6 +87,14 @@ class Player(GameSprite):
         elif keys[self.down] and self.rect.y < main_window.get_height()-self.rect.height:
             self.rect.y += self.speed
 
+class Bot(Player):
+    def update(self) -> None:
+        ball_center = ball_g.rect.centery
+        if self.rect.centery > ball_center and self.rect.y > 0:
+            self.rect.y -= self.speed
+        elif self.rect.centery < ball_center and self.rect.y < main_window.get_height()-self.rect.height:
+            self.rect.y += self.speed
+
 class Ball(GameSprite):
     def __init__(self, image: pg.Surface, x: int, y: int, speed: int, top_speed: int, vector: list) -> None:
         super().__init__(image, x, y)
@@ -104,13 +111,7 @@ class Ball(GameSprite):
                 self.vector[i] -= self.speed
 
     def update(self, left_player: Player, right_player: Player) -> None:
-        if self.rect.colliderect(left_player.rect):
-            self.change_vector(0)
-            self.rect.x = left_player.rect.x + left_player.rect.width +1
-        elif self.rect.colliderect(right_player.rect):
-            self.change_vector(0)
-            self.rect.x = right_player.rect.x-self.rect.width -1
-        elif self.rect.x < 0:
+        if self.rect.x < 0:
             self.change_vector(0)
             self.rect.x = 1
             left_player.score -= 1
@@ -118,6 +119,12 @@ class Ball(GameSprite):
             self.change_vector(0)
             self.rect.x = main_window.get_width()-self.rect.width -1
             right_player.score -= 1
+        elif self.rect.colliderect(left_player.rect):
+            self.change_vector(0)
+            self.rect.x = left_player.rect.x + left_player.rect.width +1
+        elif self.rect.colliderect(right_player.rect):
+            self.change_vector(0)
+            self.rect.x = right_player.rect.x-self.rect.width -1
 
         if self.rect.y < 0:
             self.change_vector(1)
@@ -149,10 +156,10 @@ ball_g = Ball(pg.transform.scale(pg.image.load(cfg["BALL_IMG"]), cfg["BALL_DIMEN
 player1_g = Player(pg.Surface(cfg["PLAYER_DIMENSIONS"]), cfg["PLAYER1_X"], HALF_HEIGHT, cfg["PLAYER_SPEED"], PLAYER1_UP, PLAYER1_DOWN, cfg["PLAYER_SCORE"], cfg["PLAYER_COLOR"])
 player2_g = None
 player2 = Player(pg.Surface(cfg["PLAYER_DIMENSIONS"]), PLAYER2_X, HALF_HEIGHT, cfg["PLAYER_SPEED"], PLAYER2_UP, PLAYER2_DOWN, cfg["PLAYER_SCORE"], cfg["PLAYER_COLOR"])
-bot2 = None
+bot2 = Bot(pg.Surface(cfg["PLAYER_DIMENSIONS"]), PLAYER2_X, HALF_HEIGHT, cfg["PLAYER_SPEED"], PLAYER2_UP, PLAYER2_DOWN, cfg["PLAYER_SCORE"], cfg["PLAYER_COLOR"])
 
 def normalize() -> None:
-    ball_g.rect.center, ball_g.vector = (HALF_WIDTH, HALF_HEIGHT), list(BALL_VECTOR)
+    ball_g.rect.center, ball_g.vector = (HALF_WIDTH, HALF_HEIGHT), list((ri(-cfg["BALL_VECTOR"], cfg["BALL_VECTOR"]), ri(-cfg["BALL_VECTOR"], cfg["BALL_VECTOR"])))
     player1_g.rect.x, player1_g.rect.centery, player1_g.score = cfg["PLAYER1_X"], HALF_HEIGHT, cfg["PLAYER_SCORE"]
     player2_g.rect.x, player2_g.rect.centery, player2_g.score = PLAYER2_X, HALF_HEIGHT, cfg["PLAYER_SCORE"]
 
