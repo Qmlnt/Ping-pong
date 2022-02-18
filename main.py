@@ -51,7 +51,7 @@ class GameSprite(pg.sprite.Sprite):
         main_window.blit(self.image, (self.rect.x, self.rect.y))
 
 class Button(GameSprite):
-    def __init__(self, image: pg.Surface, x: int, y: int, color: tuple, border_color: tuple, border_thickness: tuple, txt_content: str, txt_font: str, txt_size: int, txt_color: tuple) -> None:
+    def __init__(self, image: pg.Surface, x: int, y: int, color: tuple, border_color: tuple, border_thickness: int, txt_content: str, txt_font: str, txt_size: int, txt_color: tuple) -> None:
         super().__init__(image, x, y, color)
         self.text = Text(txt_font, txt_size, self.rect.centerx, self.rect.centery, txt_color)
         self.border_thickness = border_thickness
@@ -69,6 +69,36 @@ class Button(GameSprite):
     def draw(self) -> None:
         super().draw()
         self.text.draw(self.content)
+        pg.draw.rect(self.image, self.border_color, (0,0, self.rect.width, self.rect.height), self.border_thickness)
+
+class Settings_block(GameSprite):
+    def __init__(self, x: int, y: int, description: str, variable: float, change: float) -> None:
+        super().__init__(pg.Surface(cfg["SETTINGS_DIMENSIONS"]), x, y, cfg["SETTINGS_BUTTON_COLOR"])
+        self.change = change
+        self.variable = variable
+        self.description = description
+        self.border_color = cfg["BUTTON_BORDER_COLOR"]
+        self.border_thickness = cfg["BUTTON_BORDER_THICKNESS"]
+
+        self.description_text = Text(cfg["TEXT_FONT"], cfg["SETTINGS_TEXT_SIZE"], self.rect.centerx, self.rect.y-cfg["SETTINGS_TEXT_SIZE"]/2-6, cfg["SETTINGS_TEXT_COLOR"])
+        self.text = Text(cfg["TEXT_FONT"], cfg["SETTINGS_TEXT_SIZE"], self.rect.centerx, self.rect.centery, cfg["BUTTON_TEXT_COLOR"])
+        self.left = Button(pg.Surface((self.rect.height, self.rect.height)), self.rect.x-2-self.rect.height/2, y, cfg["SETTINGS_BUTTON_COLOR"], self.border_color,
+            self.border_thickness, "<", cfg["TEXT_FONT"], cfg["SETTINGS_TEXT_SIZE"], cfg["BUTTON_TEXT_COLOR"])
+        self.right = Button(pg.Surface((self.rect.height, self.rect.height)), self.rect.x+self.rect.width+2+self.rect.height/2, y, cfg["SETTINGS_BUTTON_COLOR"],
+            self.border_color, self.border_thickness, ">", cfg["TEXT_FONT"], cfg["SETTINGS_TEXT_SIZE"], cfg["BUTTON_TEXT_COLOR"])
+
+    def update(self) -> None:
+        if self.left.clicked():
+            self.variable -= self.change
+        elif self.right.clicked():
+            self.variable += self.change
+
+    def draw(self) -> None:
+        super().draw()
+        self.right.draw()
+        self.left.draw()
+        self.text.draw(str(self.variable))
+        self.description_text.draw(self.description)
         pg.draw.rect(self.image, self.border_color, (0,0, self.rect.width, self.rect.height), self.border_thickness)
 
 class Player(GameSprite):
@@ -140,25 +170,55 @@ class Ball(GameSprite):
 # configuring objects
 
 background_game = pg.transform.scale(pg.image.load(cfg["BACKGROUND_IMG"]), (cfg["WINDOW_WIDTH"], cfg["WINDOW_HEIGHT"]))
+background_menu = pg.Surface((cfg["WINDOW_WIDTH"], cfg["WINDOW_HEIGHT"]))
+background_menu.fill(cfg["MENU_COLOR"])
 
 pvp_button = Button(pg.Surface(cfg["BUTTON_DIMENSIONS"]), HALF_WIDTH, HALF_HEIGHT-cfg["BUTTON_DISTANCES"]-cfg["BUTTON_DIMENSIONS"][1], cfg["BUTTON_COLOR"],
     cfg["BUTTON_BORDER_COLOR"], cfg["BUTTON_BORDER_THICKNESS"], "Player VS Player", cfg["TEXT_FONT"], cfg["BUTTON_TEXT_SIZE"], cfg["BUTTON_TEXT_COLOR"])
 pvbot_button = Button(pg.Surface(cfg["BUTTON_DIMENSIONS"]), HALF_WIDTH, HALF_HEIGHT, cfg["BUTTON_COLOR"], cfg["BUTTON_BORDER_COLOR"], cfg["BUTTON_BORDER_THICKNESS"],
     "Player VS Bot", cfg["TEXT_FONT"], cfg["BUTTON_TEXT_SIZE"], cfg["BUTTON_TEXT_COLOR"])
+settings_button = Button(pg.Surface(cfg["BUTTON_DIMENSIONS"]), HALF_WIDTH, HALF_HEIGHT+cfg["BUTTON_DISTANCES"]+cfg["BUTTON_DIMENSIONS"][1], cfg["BUTTON_COLOR"],
+    cfg["BUTTON_BORDER_COLOR"], cfg["BUTTON_BORDER_THICKNESS"], "Settings", cfg["TEXT_FONT"], cfg["BUTTON_TEXT_SIZE"], cfg["BUTTON_TEXT_COLOR"])
 counter1_m = Text(cfg["TEXT_FONT"], cfg["TEXT_MENU_SIZE"], cfg["TEXT_MENU1_X"], HALF_HEIGHT, cfg["TEXT_COUNT_COLOR"])
 counter2_m = Text(cfg["TEXT_FONT"], cfg["TEXT_MENU_SIZE"], TEXT_MENU2_X, HALF_HEIGHT, cfg["TEXT_COUNT_COLOR"])
 player1_menu_score = 0
 player2_menu_score = 0
 
+
+right_layer_x = cfg["WINDOW_WIDTH"]/4
+left_layer_x = cfg["WINDOW_WIDTH"]-right_layer_x
+back_to_menu = Button(pg.Surface((120, 40)), 70, 30, cfg["BUTTON_COLOR"], cfg["BUTTON_BORDER_COLOR"], cfg["BUTTON_BORDER_THICKNESS"], "<- back",
+    cfg["TEXT_FONT"], cfg["SETTINGS_TEXT_SIZE"], cfg["BUTTON_TEXT_COLOR"])
+save_and_quit = Button(pg.Surface((210, 60)), HALF_WIDTH, 40, cfg["BUTTON_COLOR"], cfg["BUTTON_BORDER_COLOR"], cfg["BUTTON_BORDER_THICKNESS"], "Save and Quit",
+    cfg["TEXT_FONT"], cfg["SETTINGS_TEXT_SIZE"], cfg["BUTTON_TEXT_COLOR"])
+settings_window_width = Settings_block(right_layer_x, 150, "Window width", cfg["WINDOW_WIDTH"], 20)
+get_x = lambda num: settings_window_width.rect.y+settings_window_width.rect.height/2 + (settings_window_width.rect.height+cfg["SETTINGS_TEXT_SIZE"]+10)*num
+settings_window_height = Settings_block(right_layer_x, get_x(1), "Window height", cfg["WINDOW_HEIGHT"], 20)
+settings_ball_acceleration = Settings_block(right_layer_x, get_x(2), "Ball acceleration", cfg["BALL_SPEED"], 0.1)
+settings_ball_top_speed = Settings_block(right_layer_x, get_x(3), "Ball top speed", cfg["BALL_TOP_SPEED"], 2)
+settings_ball_initial_speed = Settings_block(right_layer_x, get_x(4), "Ball initial speed", cfg["BALL_VECTOR"], 1)
+settings_player_speed = Settings_block(left_layer_x, 150, "Player speed", cfg["PLAYER_SPEED"], 1)
+settings_player_score = Settings_block(left_layer_x, get_x(1), "Player score", cfg["PLAYER_SCORE"], 1)
+settings_ball_size = Settings_block(left_layer_x, get_x(2), "Ball size", cfg["BALL_SIZE"], 2)
+settings_player_width = Settings_block(left_layer_x, get_x(3), "Player width", cfg["PLAYER_DIMENSIONS"][0], 2)
+settings_player_height = Settings_block(left_layer_x, get_x(4), "Player height", cfg["PLAYER_DIMENSIONS"][1], 10)
+
+
+menu_g = Button(pg.Surface((120, 40)), HALF_WIDTH, 25, cfg["SETTINGS_TEXT_COLOR"], cfg["SETTINGS_TEXT_COLOR"], cfg["BUTTON_BORDER_THICKNESS"], "MENU",
+    cfg["TEXT_FONT"], cfg["SETTINGS_TEXT_SIZE"], cfg["MENU_COLOR"])
+pause_g = Button(pg.Surface((100, 50)), HALF_WIDTH, 60, cfg["SETTINGS_TEXT_COLOR"], cfg["SETTINGS_TEXT_COLOR"], cfg["BUTTON_BORDER_THICKNESS"], "pause",
+    cfg["TEXT_FONT"], cfg["SETTINGS_TEXT_SIZE"], cfg["MENU_COLOR"])
 counter1_g = Text(cfg["TEXT_FONT"], cfg["TEXT_SIZE"], cfg["TEXT_COUNTER1_X"], TEXT_COUNT_Y, cfg["TEXT_COUNT_COLOR"])
 counter2_g = Text(cfg["TEXT_FONT"], cfg["TEXT_SIZE"], TEXT_COUNTER2_X, TEXT_COUNT_Y, cfg["TEXT_COUNT_COLOR"])
-ball_g = Ball(pg.transform.scale(pg.image.load(cfg["BALL_IMG"]), cfg["BALL_DIMENSIONS"]), HALF_WIDTH, HALF_HEIGHT, cfg["BALL_SPEED"], cfg["BALL_TOP_SPEED"], BALL_VECTOR)
+ball_g = Ball(pg.transform.scale(pg.image.load(cfg["BALL_IMG"]), (cfg["BALL_SIZE"], cfg["BALL_SIZE"])), HALF_WIDTH, HALF_HEIGHT, cfg["BALL_SPEED"], cfg["BALL_TOP_SPEED"], BALL_VECTOR)
 player1_g = Player(pg.Surface(cfg["PLAYER_DIMENSIONS"]), cfg["PLAYER1_X"], HALF_HEIGHT, cfg["PLAYER_SPEED"], PLAYER1_UP, PLAYER1_DOWN, cfg["PLAYER_SCORE"], cfg["PLAYER_COLOR"])
 player2_g = None
 player2 = Player(pg.Surface(cfg["PLAYER_DIMENSIONS"]), PLAYER2_X, HALF_HEIGHT, cfg["PLAYER_SPEED"], PLAYER2_UP, PLAYER2_DOWN, cfg["PLAYER_SCORE"], cfg["PLAYER_COLOR"])
 bot2 = Bot(pg.Surface(cfg["PLAYER_DIMENSIONS"]), PLAYER2_X, HALF_HEIGHT, cfg["PLAYER_SPEED"], PLAYER2_UP, PLAYER2_DOWN, cfg["PLAYER_SCORE"], cfg["PLAYER_COLOR"])
 
 def normalize() -> None:
+    global pause
+    pause = False
     ball_g.rect.center, ball_g.vector = (HALF_WIDTH, HALF_HEIGHT), list((ri(-cfg["BALL_VECTOR"], cfg["BALL_VECTOR"]), ri(-cfg["BALL_VECTOR"], cfg["BALL_VECTOR"])))
     player1_g.rect.x, player1_g.rect.centery, player1_g.score = cfg["PLAYER1_X"], HALF_HEIGHT, cfg["PLAYER_SCORE"]
     player2_g.rect.x, player2_g.rect.centery, player2_g.score = PLAYER2_X, HALF_HEIGHT, cfg["PLAYER_SCORE"]
@@ -166,6 +226,8 @@ def normalize() -> None:
 # the game itself
 menu = True
 game = False
+pause = False
+settings = False
 executing = True
 while executing:
     event_list = pg.event.get()
@@ -176,11 +238,12 @@ while executing:
             if e.key == pg.K_r:
                 normalize()
 
-    main_window.blit(background_game, (0,0))
 
     if menu:
+        main_window.blit(background_menu, (0,0))
         pvp_button.draw()
         pvbot_button.draw()
+        settings_button.draw()
         counter1_m.draw(str(player1_menu_score))
         counter2_m.draw(str(player2_menu_score))
         if pvp_button.clicked() or pvbot_button.clicked():
@@ -188,23 +251,61 @@ while executing:
             normalize()
             game = True
             menu = False
+        elif settings_button.clicked():
+            menu = False
+            settings = True
+
+    if settings:
+        main_window.blit(background_menu, (0,0))
+
+        for el in [settings_window_width, settings_window_height, settings_ball_top_speed, settings_ball_acceleration, settings_ball_initial_speed,
+        settings_ball_size, settings_player_speed, settings_player_score, settings_player_width, settings_player_height]: el.draw(); el.update()
+
+        back_to_menu.draw()
+        save_and_quit.draw()
+
+        if save_and_quit.clicked():
+            cfg["WINDOW_WIDTH"] = settings_window_width.variable
+            cfg["WINDOW_HEIGHT"] = settings_window_height.variable
+            cfg["BALL_SPEED"] = settings_ball_acceleration.variable
+            cfg["BALL_TOP_SPEED"] = settings_ball_top_speed.variable
+            cfg["BALL_VECTOR"] = settings_ball_initial_speed.variable
+            cfg["BALL_SIZE"] = settings_ball_size.variable
+            cfg["PLAYER_SPEED"] = settings_player_speed.variable
+            cfg["PLAYER_SCORE"] = settings_player_score.variable
+            cfg["PLAYER_DIMENSIONS"] = [settings_player_width.variable, settings_player_height.variable]
+
+            with open("config.json", 'w', encoding='utf-8') as f:
+                json.dump(cfg, f, ensure_ascii=False, indent=2)
+            executing = False
+
+        elif back_to_menu.clicked():
+            menu = True
+            settings = False
+
 
     if game:
-        player1_g.update()
-        player2_g.update()
-        ball_g.update(player1_g, player2_g)
+        main_window.blit(background_game, (0,0))
+        if not pause:
+            player1_g.update()
+            player2_g.update()
+            ball_g.update(player1_g, player2_g)
         counter1_g.draw(str(player1_g.score))
         counter2_g.draw(str(player2_g.score))
+        pause_g.draw()
+        menu_g.draw()
         ball_g.draw()
         player1_g.draw()
         player2_g.draw()
 
-        if player1_g.score < 1 or player2_g.score < 1:
+        if pause_g.clicked(): pause = not pause
+
+        if player1_g.score < 1 or player2_g.score < 1 or menu_g.clicked():
             menu = True
             game = False
             if player2_g.score < 1:
                 player1_menu_score +=1
-            else:
+            elif player1_g.score < 1:
                 player2_menu_score += 1
 
     pg.display.update()

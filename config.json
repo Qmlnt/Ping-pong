@@ -1,35 +1,77 @@
 {
-"FPS": 60,
-"WINDOW_WIDTH": 800,
-"WINDOW_HEIGHT": 500,
-"WINDOW_CAPTION": "Ping pong",
-"WINDOW_ICON_IMG" : "icon.png",
-"BACKGROUND_IMG": "background.jpg",
-
-"BALL_IMG": "ball.png",
-"BALL_VECTOR": 6,
-"BALL_SPEED": 0.2,
-"BALL_TOP_SPEED": 20,
-"BALL_DIMENSIONS": [50, 50],
-
-"PLAYER_DIMENSIONS": [30, 150],
-"PLAYER_SPEED": 10,
-"PLAYER_SCORE": 10,
-"PLAYER_COLOR": [0,255,255],
-"PLAYER1_X": 10,
-
-"TEXT_SIZE": 50,
-"TEXT_FONT": "Comic Sans MS",
-"TEXT_COUNT_COLOR": [155, 255, 255],
-"TEXT_COUNTER1_X": 250,
-"TEXT_MENU_SIZE": 100,
-"TEXT_MENU1_X": 100,
-
-"BUTTON_DIMENSIONS": [350, 80],
-"BUTTON_DISTANCES": 10,
-"BUTTON_COLOR": [255, 170, 0],
-"BUTTON_BORDER_COLOR":[200, 0, 255],
-"BUTTON_BORDER_THICKNESS": 3,
-"BUTTON_TEXT_SIZE": 40,
-"BUTTON_TEXT_COLOR": [0, 255, 100]
+  "FPS": 60,
+  "WINDOW_WIDTH": 1920,
+  "WINDOW_HEIGHT": 1080,
+  "WINDOW_CAPTION": "Ping pong",
+  "WINDOW_ICON_IMG": "icon.png",
+  "BACKGROUND_IMG": "background.jpg",
+  "MENU_COLOR": [
+    255,
+    100,
+    100
+  ],
+  "BALL_IMG": "ball.png",
+  "BALL_VECTOR": 10,
+  "BALL_SPEED": 0.4,
+  "BALL_TOP_SPEED": 30,
+  "BALL_SIZE": 100,
+  "PLAYER_DIMENSIONS": [
+    40,
+    250
+  ],
+  "PLAYER_SPEED": 15,
+  "PLAYER_SCORE": 20,
+  "PLAYER_COLOR": [
+    0,
+    255,
+    255
+  ],
+  "PLAYER1_X": 10,
+  "TEXT_SIZE": 50,
+  "TEXT_FONT": "Comic Sans MS",
+  "TEXT_COUNT_COLOR": [
+    155,
+    255,
+    255
+  ],
+  "TEXT_COUNTER1_X": 250,
+  "TEXT_MENU_SIZE": 100,
+  "TEXT_MENU1_X": 100,
+  "BUTTON_DIMENSIONS": [
+    350,
+    80
+  ],
+  "BUTTON_DISTANCES": 10,
+  "BUTTON_COLOR": [
+    255,
+    255,
+    150
+  ],
+  "BUTTON_BORDER_COLOR": [
+    200,
+    0,
+    255
+  ],
+  "BUTTON_BORDER_THICKNESS": 3,
+  "BUTTON_TEXT_SIZE": 40,
+  "BUTTON_TEXT_COLOR": [
+    50,
+    50,
+    255
+  ],
+  "SETTINGS_BUTTON_COLOR": [
+    255,
+    255,
+    100
+  ],
+  "SETTINGS_DIMENSIONS": [
+    100,
+    40
+  ],
+  "SETTINGS_TEXT_COLOR": [
+    100,
+    255,
+    150
+  ],
+  "SETTINGS_TEXT_SIZE": 30
 }
